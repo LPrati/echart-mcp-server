@@ -5,6 +5,7 @@ Este servidor fornece ferramentas para criar gráficos de linha, barra e pizza
 no padrão Apache ECharts, com suporte para formatação de dados em português brasileiro.
 """
 
+import argparse
 from typing import List, Dict, Any, Optional, Union
 from fastmcp import FastMCP
 from formatters import create_echarts_formatter
@@ -325,4 +326,25 @@ def create_combined_chart(
 
 
 if __name__ == "__main__":
-    mcp.run(transport="sse", show_banner=False)
+    parser = argparse.ArgumentParser(description="EChart MCP Server")
+    parser.add_argument(
+        "--host", 
+        type=str, 
+        default="127.0.0.1",
+        help="Host to bind the server (default: 127.0.0.1)"
+    )
+    parser.add_argument(
+        "--port", 
+        type=int, 
+        default=8000,
+        help="Port to bind the server (default: 8000)"
+    )
+    
+    args = parser.parse_args()
+    
+    mcp.run(
+        transport="sse", 
+        host=args.host,
+        port=args.port,
+        show_banner=False
+    )
