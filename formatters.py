@@ -110,26 +110,25 @@ def get_formatter_function(format_type: str):
 
 def create_echarts_formatter(format_type: str) -> str:
     """
-    Cria uma string de função JavaScript para formatação no ECharts.
+    Cria uma string de template para formatação no ECharts.
     
     Args:
         format_type: Tipo de formatação ('currency_brl', 'percentage', 'absolute', 'date', None).
         
     Returns:
-        String contendo a função JavaScript para usar no formatter do ECharts.
+        String contendo o template para usar no formatter do ECharts.
     """
     if format_type == 'currency_brl':
-        return """function(value) {
-            return value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
-        }"""
+        # Template simples para moeda brasileira
+        return "R$ {value}"
     elif format_type == 'percentage':
-        return "function(value) { return value.toFixed(1) + '%'; }"
+        # Template para porcentagem
+        return "{value}%"
     elif format_type == 'absolute':
-        return "function(value) { return value.toLocaleString('pt-BR'); }"
+        # Template para valor absoluto
+        return "{value}"
     elif format_type == 'date':
-        return """function(value) {
-            const date = new Date(value);
-            return date.toLocaleDateString('pt-BR');
-        }"""
+        # Template para data (limitado, mas funcional)
+        return "{value}"
     else:
-        return "function(value) { return value; }"
+        return "{value}"
