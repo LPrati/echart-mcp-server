@@ -15,4 +15,4 @@ RUN uv pip install --system --no-cache .
 COPY formatters.py ./
 COPY echart_server.py ./
 
-CMD ["python", "echart_server.py"]
+CMD ["python", "echart_server.py", "--host", "0.0.0.0", "--port", "8000"]

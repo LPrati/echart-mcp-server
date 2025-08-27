@@ -27,7 +27,35 @@ pip install -r requirements.txt
 ### Executar o servidor
 
 ```bash
+# Executar com configurações padrão (127.0.0.1:8000)
 uv run python echart_server.py
+
+# Especificar host e porta customizados
+uv run python echart_server.py --host 0.0.0.0 --port 8080
+
+# Ver opções disponíveis
+uv run python echart_server.py --help
+```
+
+#### Parâmetros de Execução
+
+- `--host`: Endereço IP para bind do servidor (padrão: `127.0.0.1`)
+  - Use `127.0.0.1` para acesso local apenas
+  - Use `0.0.0.0` para aceitar conexões de qualquer interface (útil em Docker)
+  
+- `--port`: Porta para o servidor (padrão: `8000`)
+
+#### Exemplos de Uso
+
+```bash
+# Desenvolvimento local
+python echart_server.py
+
+# Produção/Docker - aceitar conexões externas
+python echart_server.py --host 0.0.0.0 --port 8080
+
+# Porta customizada mantendo acesso local
+python echart_server.py --port 3000
 ```
 
 ### Ferramentas Disponíveis
