@@ -73,6 +73,18 @@ Cria gráficos de linha para visualizar séries temporais ou tendências.
 - `y_label` (str, opcional): Rótulo do eixo Y
 - `y_format_type` (str, opcional): Tipo de formatação ('currency_brl', 'percentage', 'absolute')
 
+**Retorno:**
+String formatada no padrão:
+```
+```echarts
+{
+    "title": {...},
+    "xAxis": {...},
+    ...
+}
+```
+```
+
 **Exemplo:**
 ```python
 result = create_line_chart(
@@ -82,6 +94,7 @@ result = create_line_chart(
     series_names=["Vendas 2024"],
     y_format_type="currency_brl"
 )
+# result será uma string começando com ```echarts
 ```
 
 #### 2. `create_bar_chart`
@@ -98,6 +111,9 @@ Cria gráficos de barras para comparar categorias ou grupos.
 - `y_format_type` (str, opcional): Tipo de formatação
 - `stack` (bool, opcional): Se True, cria barras empilhadas
 
+**Retorno:**
+String formatada com configuração ECharts.
+
 **Exemplo:**
 ```python
 result = create_bar_chart(
@@ -110,6 +126,7 @@ result = create_bar_chart(
     series_names=["Loja A", "Loja B"],
     y_format_type="currency_brl"
 )
+# result será uma string com a configuração completa do gráfico
 ```
 
 #### 3. `create_pie_chart`
@@ -123,6 +140,9 @@ Cria gráficos de pizza para mostrar proporções ou distribuições.
 - `radius` (str): Raio do gráfico (padrão: "50%")
 - `center` (List[str]): Posição do centro [x, y]
 
+**Retorno:**
+String formatada com configuração ECharts.
+
 **Exemplo:**
 ```python
 result = create_pie_chart(
@@ -134,6 +154,7 @@ result = create_pie_chart(
     ],
     show_percentage=True
 )
+# result será uma string formatada no padrão especificado
 ```
 
 #### 4. `create_combined_chart`
@@ -149,6 +170,9 @@ Cria gráficos combinados com linhas e barras.
 - `y_label` (str, opcional): Rótulo do eixo Y
 - `y_format_type` (str, opcional): Tipo de formatação
 
+**Retorno:**
+String formatada com configuração ECharts.
+
 **Exemplo:**
 ```python
 result = create_combined_chart(
@@ -158,6 +182,7 @@ result = create_combined_chart(
     line_data=[{"name": "Meta", "data": [110000, 110000, 110000]}],
     y_format_type="currency_brl"
 )
+# result será uma string formatada para uso direto
 ```
 
 ## Tipos de Formatação
@@ -176,11 +201,17 @@ Formata datas no padrão brasileiro (DD/MM/YYYY)
 
 ## Integração com Aplicações Web
 
-Os objetos retornados pelo servidor são configurações completas do Apache ECharts que podem ser usados diretamente:
+As ferramentas retornam strings formatadas com a configuração completa do Apache ECharts:
 
 ```javascript
 // No frontend JavaScript
-const chartConfig = await getChartFromMCP();  // Resultado do MCP server
+const response = await getChartFromMCP();  // String retornada do MCP server
+// A string vem no formato ```echarts\n{...}\n```
+// Extrair o JSON da string
+const jsonContent = response.slice(11, -4);  // Remove ```echarts\n e \n```
+const chartConfig = JSON.parse(jsonContent);
+
+// Usar no ECharts
 const myChart = echarts.init(document.getElementById('chart'));
 myChart.setOption(chartConfig);
 ```

@@ -6,11 +6,26 @@ no padrão Apache ECharts, com suporte para formatação de dados em português 
 """
 
 import argparse
+import json
 from typing import List, Dict, Any, Optional, Union
 from fastmcp import FastMCP
 from formatters import create_echarts_formatter
 
 mcp = FastMCP("EChart Graph Builder")
+
+
+def format_echarts_response(config: Dict[str, Any]) -> str:
+    """
+    Converte configuração ECharts em string formatada.
+    
+    Args:
+        config: Dicionário com a configuração do gráfico ECharts.
+        
+    Returns:
+        String formatada com ```echarts\n{json}\n```
+    """
+    json_str = json.dumps(config, ensure_ascii=False, indent=4)
+    return f"```echarts\n{json_str}\n```"
 
 
 @mcp.tool
@@ -22,7 +37,7 @@ def create_line_chart(
     x_label: Optional[str] = None,
     y_label: Optional[str] = None,
     y_format_type: Optional[str] = None
-) -> Dict[str, Any]:
+) -> str:
     """
     Cria um gráfico de linhas no padrão Apache ECharts.
     
@@ -36,7 +51,7 @@ def create_line_chart(
         y_format_type: Tipo de formatação do eixo Y ('currency_brl', 'percentage', 'absolute', None).
         
     Returns:
-        Configuração completa do gráfico ECharts.
+        String formatada com configuração completa do gráfico ECharts.
     """
     if len(y_data) != len(series_names):
         raise ValueError("Número de séries de dados deve corresponder ao número de nomes de séries")
@@ -48,19 +63,40 @@ def create_line_chart(
             "text": title,
             "left": "center"
         },
+        "grid": {
+            "top": 56,
+            "right": 8,
+            "left": 8,
+            "bottom": 64,
+            "containLabel": True
+        },
         "tooltip": {
-            "trigger": "axis"
+            "trigger": "axis",
+            "confine": True,
+            "axisPointer": {"type": "line", "snap": True},
+            "order": "valueDesc"
         },
         "legend": {
             "data": series_names,
-            "top": "bottom"
+            "type": "scroll",
+            "bottom": 8,
+            "left": "center",
+            "itemWidth": 12,
+            "itemHeight": 8,
+            "textStyle": {"fontSize": 11}
         },
         "xAxis": {
             "type": "category",
             "data": x_data,
             "name": x_label or "",
             "nameLocation": "middle",
-            "nameGap": 30
+            "nameGap": 30,
+            "boundaryGap": False,
+            "axisLabel": {
+                "interval": 0,
+                "hideOverlap": True,
+                "fontSize": 11
+            }
         },
         "yAxis": {
             "type": "value",
@@ -68,6 +104,9 @@ def create_line_chart(
             "nameLocation": "middle",
             "nameGap": 50
         },
+        "dataZoom": [
+            {"type": "inside", "xAxisIndex": 0}
+        ],
         "series": []
     }
     
@@ -83,7 +122,7 @@ def create_line_chart(
         config["yAxis"]["axisLabel"] = {"formatter": formatter_js}
         config["tooltip"]["valueFormatter"] = formatter_js
     
-    return config
+    return format_echarts_response(config)
 
 
 @mcp.tool
@@ -96,7 +135,7 @@ def create_bar_chart(
     y_label: Optional[str] = None,
     y_format_type: Optional[str] = None,
     stack: Optional[bool] = False
-) -> Dict[str, Any]:
+) -> str:
     """
     Cria um gráfico de barras no padrão Apache ECharts.
     
@@ -111,34 +150,59 @@ def create_bar_chart(
         stack: Se True, cria barras empilhadas.
         
     Returns:
-        Configuração completa do gráfico ECharts.
+        String formatada com configuração completa do gráfico ECharts.
     """
     if len(series_data) != len(series_names):
         raise ValueError("Número de séries de dados deve corresponder ao número de nomes de séries")
     
     formatter_js = create_echarts_formatter(y_format_type)
+
+    max_cat_len = max((len(str(c)) for c in categories), default=0)
+    x_label_rotate = 0 if max_cat_len <= 8 else (30 if max_cat_len <= 14 else 45)
+
     
     config = {
         "title": {
             "text": title,
             "left": "center"
         },
+        "grid": {
+            "top": 56,
+            "right": 8,
+            "left": 8,
+            "bottom": 72,
+            "containLabel": True
+        },
+
         "tooltip": {
             "trigger": "axis",
-            "axisPointer": {
-                "type": "shadow"
-            }
+            "confine": True,
+            "axisPointer": {"type": "shadow", "snap": True},
+            "order": "valueDesc"
         },
+
         "legend": {
             "data": series_names,
-            "top": "bottom"
+            "type": "scroll",
+            "bottom": 8,
+            "left": "center",
+            "itemWidth": 12,
+            "itemHeight": 8,
+            "textStyle": {"fontSize": 11}
         },
         "xAxis": {
             "type": "category",
             "data": categories,
             "name": x_label or "",
             "nameLocation": "middle",
-            "nameGap": 30
+            "nameGap": 30,
+            "axisTick": {"alignWithLabel": True},
+            "axisLabel": {
+                "interval": 0,
+                "hideOverlap": True,
+                "rotate": x_label_rotate,
+                "fontSize": 11
+            }
         },
         "yAxis": {
             "type": "value",
@@ -146,6 +210,9 @@ def create_bar_chart(
             "nameLocation": "middle",
             "nameGap": 50
         },
+        "dataZoom": [
+            {"type": "inside", "xAxisIndex": 0}
+        ],
         "series": []
     }
     
@@ -163,7 +230,7 @@ def create_bar_chart(
         config["yAxis"]["axisLabel"] = {"formatter": formatter_js}
         config["tooltip"]["valueFormatter"] = formatter_js
     
-    return config
+    return format_echarts_response(config)
 
 
 @mcp.tool
@@ -173,7 +240,7 @@ def create_pie_chart(
     show_percentage: bool = True,
     radius: str = "50%",
     center: List[str] = None
-) -> Dict[str, Any]:
+) -> str:
     """
     Cria um gráfico de pizza no padrão Apache ECharts.
     
@@ -185,7 +252,7 @@ def create_pie_chart(
         center: Posição do centro [x, y] (padrão: ["50%", "50%"]).
         
     Returns:
-        Configuração completa do gráfico ECharts.
+        String formatada com configuração completa do gráfico ECharts.
     """
     if not all('name' in item and 'value' in item for item in data):
         raise ValueError("Cada item de dados deve conter 'name' e 'value'")
@@ -194,36 +261,87 @@ def create_pie_chart(
         center = ["50%", "50%"]
     
     legend_data = [item['name'] for item in data]
+    num_slices = len(data)
+    show_value_labels = num_slices <= 6
+
+    if show_percentage:
+        label_fmt = "{d}%"
+        tooltip_fmt = "{a} <br/>{b}: {c} ({d}%)"
+    else:
+        label_fmt = "{c}"
+        tooltip_fmt = "{a} <br/>{b}: {c}"
     
     config = {
         "title": {
             "text": title,
             "left": "center"
         },
+
         "tooltip": {
-            "trigger": "item"
+            "trigger": "item",
+            "confine": True,
+            "order": "valueDesc",
+            "formatter": tooltip_fmt
         },
+
         "legend": {
             "data": legend_data,
-            "orient": "vertical",
-            "left": "left"
+            "type": "scroll",
+            "bottom": 8,
+            "left": "center",
+            "orient": "horizontal",
+            "itemWidth": 12,
+            "itemHeight": 8,
+            "textStyle": {"fontSize": 11}
         },
+
         "series": [
             {
                 "name": title,
                 "type": "pie",
                 "radius": radius,
                 "center": center,
+
+                "avoidLabelOverlap": True,
+                "minAngle": 3,
+                "padAngle": 1,
+                "selectedOffset": 6,
+
+                "label": {
+                    "show": show_value_labels,
+                    "formatter": label_fmt,
+                    "fontSize": 11,
+                    "position": "outside"
+                },
+                "labelLine": {
+                    "show": show_value_labels,
+                    "length": 8,
+                    "length2": 6,
+                    "smooth": True
+                },
+                "labelLayout": { "hideOverlap": True },
+
                 "data": data,
+
                 "emphasis": {
+                    "focus": "self",
+                    "scale": True,
+                    "scaleSize": 8,
                     "itemStyle": {
-                        "shadowBlur": 10,
+                        "shadowBlur": 12,
                         "shadowOffsetX": 0,
-                        "shadowColor": "rgba(0, 0, 0, 0.5)"
-                    }
+                        "shadowColor": "rgba(0, 0, 0, 0.35)"
+                    },
+                    "label": { "show": True }
+                },
+
+                "itemStyle": {
+                    "borderColor": "#fff",
+                    "borderWidth": 1
                 }
             }
-        ]
+        ],
+
     }
     
     if show_percentage:
@@ -231,7 +349,7 @@ def create_pie_chart(
     else:
         config["tooltip"]["formatter"] = "{a} <br/>{b}: {c}"
     
-    return config
+    return format_echarts_response(config)
 
 
 @mcp.tool
@@ -243,7 +361,7 @@ def create_combined_chart(
     x_label: Optional[str] = None,
     y_label: Optional[str] = None,
     y_format_type: Optional[str] = None
-) -> Dict[str, Any]:
+) -> str:
     """
     Cria um gráfico combinado de linhas e barras no padrão Apache ECharts.
     
@@ -257,7 +375,7 @@ def create_combined_chart(
         y_format_type: Tipo de formatação do eixo Y ('currency_brl', 'percentage', 'absolute', None).
         
     Returns:
-        Configuração completa do gráfico ECharts.
+        String formatada com configuração completa do gráfico ECharts.
     """
     if not line_data and not bar_data:
         raise ValueError("Deve fornecer pelo menos dados de linha ou barra")
@@ -270,27 +388,57 @@ def create_combined_chart(
     if bar_data:
         all_series_names.extend([item['name'] for item in bar_data])
     
+    max_cat_len = max((len(str(c)) for c in x_data), default=0)
+    x_label_rotate = 0 if max_cat_len <= 8 else (30 if max_cat_len <= 14 else 45)
+    show_value_labels = len(x_data) <= 6
+    has_bars = bool(bar_data)
+
+
     config = {
         "title": {
             "text": title,
             "left": "center"
         },
+
+        "grid": {
+            "top": 56,
+            "right": 8,
+            "left": 8,
+            "bottom": 72,
+            "containLabel": True
+        },
+
         "tooltip": {
             "trigger": "axis",
-            "axisPointer": {
-                "type": "cross"
-            }
+            "confine": True,
+            "axisPointer": {"type": "cross", "snap": True},
+            "order": "valueDesc"
         },
+
         "legend": {
             "data": all_series_names,
-            "top": "bottom"
+            "type": "scroll",
+            "bottom": 8,
+            "left": "center",
+            "itemWidth": 12,
+            "itemHeight": 8,
+            "textStyle": {"fontSize": 11}
         },
+
         "xAxis": {
             "type": "category",
             "data": x_data,
             "name": x_label or "",
             "nameLocation": "middle",
-            "nameGap": 30
+            "nameGap": 30,
+            "boundaryGap": has_bars,
+            "axisTick": {"alignWithLabel": True},
+            "axisLabel": {
+                "interval": 0,
+                "hideOverlap": True,
+                "rotate": x_label_rotate,
+                "fontSize": 11
+            }
         },
         "yAxis": {
             "type": "value",
@@ -298,31 +446,52 @@ def create_combined_chart(
             "nameLocation": "middle",
             "nameGap": 50
         },
+        "dataZoom": [
+            {"type": "inside", "xAxisIndex": 0}
+        ],
         "series": []
     }
     
     if line_data:
         for item in line_data:
             config["series"].append({
-                "name": item['name'],
+                "name": item["name"],
                 "type": "line",
-                "data": item['data'],
-                "smooth": True
+                "data": item["data"],
+                "smooth": True,
+                "symbol": "circle",
+                "symbolSize": 8,
+                "lineStyle": {"width": 3},
+                "showSymbol": True,
+                "emphasis": {"focus": "series"},
+                "labelLayout": {"hideOverlap": True},
+                "endLabel": {"show": True, "formatter": "{a}: {c}", "distance": 6}
             })
     
     if bar_data:
         for item in bar_data:
-            config["series"].append({
-                "name": item['name'],
+            series_cfg: Dict[str, Any] = {
+                "name": item["name"],
                 "type": "bar",
-                "data": item['data']
-            })
+                "data": item["data"],
+                "barMaxWidth": 36,
+                "barGap": "10%",
+                "emphasis": {"focus": "series"},
+                "labelLayout": {"hideOverlap": True}
+            }
+            if show_value_labels:
+                series_cfg["label"] = {
+                    "show": True,
+                    "position": "top",
+                    "formatter": "{c}%" if y_format_type == "percentage" else "{c}"
+                }
+            config["series"].append(series_cfg)
     
     if y_format_type:
         config["yAxis"]["axisLabel"] = {"formatter": formatter_js}
         config["tooltip"]["valueFormatter"] = formatter_js
     
-    return config
+    return format_echarts_response(config)
 
 
 if __name__ == "__main__":

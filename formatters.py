@@ -20,9 +20,17 @@ def format_currency_brl(value: Union[int, float]) -> str:
     Returns:
         String formatada em reais brasileiros (ex: R$ 1.234,56).
     """
+    # Handle special values
+    if value != value:  # NaN check
+        return "R$ NaN"
+    if value == float('inf'):
+        return "R$ ∞"
+    if value == float('-inf'):
+        return "R$ -∞"
+    
     parts = f"{value:,.2f}".split(".")
     integer_part = parts[0].replace(",", ".")
-    decimal_part = parts[1]
+    decimal_part = parts[1] if len(parts) > 1 else "00"
     return f"R$ {integer_part},{decimal_part}"
 
 
